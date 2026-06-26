@@ -96,6 +96,26 @@
         button:hover {
             background-color: #a04000;
         }
+        /* CSS UNTUK NOTIFIKASI */
+        .notification {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 700;
+            display: none;
+            transition: all 0.3s ease;
+        }
+        .notif-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .notif-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
         footer-tool {
             display: block;
             text-align: center;
@@ -126,6 +146,7 @@
     </div>
     
     <button onclick="generateAndDownload()">Generate & Download Artikel</button>
+    <div id="notif-box" class="notification"></div>
     
     <footer-tool>&copy; 2026 TastyBites Automation Tool Suite</footer-tool>
 </div>
@@ -147,7 +168,7 @@ fetch('domain.txt')
             baseDomain = domain;
         }
     })
-    .catch(err => console.log('File domain.txt tidak ditemukan.'));
+    .catch(err => console.log('File domain.txt tidak ditemukan. Menggunakan default.'));
 
 const keywordInput = document.getElementById('keyword');
 const recBox = document.getElementById('rec-box');
@@ -169,33 +190,43 @@ keywordInput.addEventListener('input', function() {
     }
 });
 
+function showNotif(message, isError = false) {
+    const notifBox = document.getElementById('notif-box');
+    notifBox.textContent = message;
+    notifBox.className = 'notification ' + (isError ? 'notif-error' : 'notif-success');
+    notifBox.style.display = 'block';
+    setTimeout(() => {
+        notifBox.style.display = 'none';
+    }, 5000);
+}
+
 function generateAndDownload() {
-    const keywordInputVal = document.getElementById('keyword').value.trim();
-    const contentInput = document.getElementById('content').value.trim();
-    
-    if (!keywordInputVal || !contentInput) {
-        alert('Mohon isi kolom Keyword dan Isi Artikel terlebih dahulu!');
-        return;
-    }
-    
-    const keywordSlug = keywordInputVal.toLowerCase()
-                                    .replace(/\s+/g, '-')
-                                    .replace(/[^a-z0-9-]/g, '')
-                                    .replace(/-+/g, '-');
-    const fileName = keywordSlug + '.html';
-    
-    const lines = contentInput.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-    
-    if (lines.length < 1) {
-        alert('Isi artikel tidak valid atau kosong!');
-        return;
-    }
-    
-    const h1Title = lines[0]; 
-    const remainingParagraphs = lines.slice(1);
-    
-    // MENYISIPKAN HIDDEN ARTICLE DI ATAS H1 PADA OUTPUT GENERATOR
-    let articleBodyHtml = `<div style="display:none; visibility:hidden;">
+    try {
+        const keywordInputVal = document.getElementById('keyword').value.trim();
+        const contentInput = document.getElementById('content').value.trim();
+        
+        if (!keywordInputVal || !contentInput) {
+            showNotif('Gagal: Mohon isi kolom Keyword dan Isi Artikel terlebih dahulu!', true);
+            return;
+        }
+        
+        const keywordSlug = keywordInputVal.toLowerCase()
+                                        .replace(/\s+/g, '-')
+                                        .replace(/[^a-z0-9-]/g, '')
+                                        .replace(/-+/g, '-');
+        const fileName = keywordSlug + '.html';
+        
+        const lines = contentInput.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+        
+        if (lines.length < 1) {
+            showNotif('Gagal: Isi artikel tidak valid atau kosong!', true);
+            return;
+        }
+        
+        const h1Title = lines[0]; 
+        const remainingParagraphs = lines.slice(1);
+        
+        let articleBodyHtml = `<div style="display:none; visibility:hidden;">
             <h1>The Ultimate Guide to Making Money Online: Wealth Creation Through Trading and Cryptocurrency</h1>
 							<p>In today's rapidly evolving digital economy, learning how to make money online has transitioned from a niche concept into a highly lucrative global industry. Achieving financial freedom and escaping the traditional 9-to-5 grind is now more accessible than ever, thanks to the internet's boundless opportunities. Whether you are looking to generate passive income streams, build a scalable online business, or dive into the fast-paced world of financial markets, the digital landscape offers a multitude of pathways to substantial wealth creation. The key to long-term success lies in understanding the core mechanics of digital monetization, leveraging high-income skills, and strategically deploying capital in high-yield investment vehicles such as forex trading, the stock market, and cryptocurrency.</p>
 						<h2>Mastering the Art of Passive Income and Digital Monetization</h2>
@@ -226,42 +257,43 @@ function generateAndDownload() {
 							<p>In the modern digital economy, making money from the internet has evolved far beyond simple side hustles; it requires engineering a comprehensive, multi-layered financial machine. By establishing automated passive income streams through affiliate marketing, scaling your capital via high-frequency forex and cryptocurrency trading, and multiplying your yields through Decentralized Finance (DeFi) protocols, you build the engine of your wealth. Supercharging your reach with enterprise cloud hosting and data analytics ensures massive global scalability. Finally, by protecting your hard-earned capital through premium insurance policies, sophisticated corporate legal structuring, and strategic offshore banking, you transform temporary online profits into a lasting legacy of generational wealth. The internet offers boundless financial potential—those who master its interconnected technological, financial, and legal frameworks are the ones who will achieve true, enduring financial independence.</p>
         </div>\n`;
 
-    articleBodyHtml += `<h1>${h1Title}</h1>\n`;
-    articleBodyHtml += `<center><script src="https://seribudollarperhari.github.io/banner/ad2.js"><\/script></center>\n`;
-    
-    const relatedQueries = [
-        `${keywordInputVal} easy recipe`,
-        `${keywordInputVal} cooking ideas`,
-        `${keywordInputVal} homemade`,
-        `${keywordInputVal} best step by step`,
-        `${keywordInputVal} quick meal`,
-        `${keywordInputVal} delicious food`
-    ];
-    
-    remainingParagraphs.forEach((paragraphText, index) => {
-        if (index === 1 || (index > 1 && index % 2 === 1)) {
-            const queryIndex = Math.floor(index / 2) % relatedQueries.length;
-            const chosenImageQuery = relatedQueries[queryIndex];
-            
-            const agcTargetSlug = chosenImageQuery.replace(/\s+/g, '-').toLowerCase();
-            const agcTargetUrl = `${baseDomain}detail.html?q=${agcTargetSlug}`;
-            
-            const imgUrl = `https://tse1.mm.bing.net/th?q=${encodeURIComponent(chosenImageQuery)}&w=800&h=450&c=7&rs=1&p=0&dpr=1.5&pid=1.7`;
-            
-            articleBodyHtml += `
-            <div class="article-image" style="text-align: center; margin: 25px 0;">
-                <a href="${agcTargetUrl}" title="View more about ${chosenImageQuery}" target="_blank">
-                    <img src="${imgUrl}" alt="${h1Title} - ${chosenImageQuery}" style="width: 100%; max-width: 800px; height: auto; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
-                </a>
-            </div>\n`;
-        }
+        articleBodyHtml += `<h1>${h1Title}</h1>\n`;
+        articleBodyHtml += `<center><script src="https://seribudollarperhari.github.io/banner/ad2.js"><\/script></center>\n`;
         
-        articleBodyHtml += `<p>${paragraphText}</p>\n`;
-    });
-    
-    const metaDesc = remainingParagraphs[0] ? remainingParagraphs[0].substring(0, 150) + '...' : h1Title;
-    
-    const finalHtmlOutput = `<!DOCTYPE html>
+        const relatedQueries = [
+            `${keywordInputVal} easy recipe`,
+            `${keywordInputVal} cooking ideas`,
+            `${keywordInputVal} homemade`,
+            `${keywordInputVal} best step by step`,
+            `${keywordInputVal} quick meal`,
+            `${keywordInputVal} delicious food`
+        ];
+        
+        remainingParagraphs.forEach((paragraphText, index) => {
+            if (index === 1 || (index > 1 && index % 2 === 1)) {
+                const queryIndex = Math.floor(index / 2) % relatedQueries.length;
+                const chosenImageQuery = relatedQueries[queryIndex];
+                
+                const agcTargetSlug = chosenImageQuery.replace(/\s+/g, '-').toLowerCase();
+                const agcTargetUrl = `${baseDomain}detail.html?q=${agcTargetSlug}`;
+                
+                const imgUrl = `https://tse1.mm.bing.net/th?q=${encodeURIComponent(chosenImageQuery)}&w=800&h=450&c=7&rs=1&p=0&dpr=1.5&pid=1.7`;
+                
+                articleBodyHtml += `
+                <div class="article-image" style="text-align: center; margin: 25px 0;">
+                    <a href="${agcTargetUrl}" title="View more about ${chosenImageQuery}" target="_blank">
+                        <img src="${imgUrl}" alt="${h1Title} - ${chosenImageQuery}" style="width: 100%; max-width: 800px; height: auto; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
+                    </a>
+                </div>\n`;
+            }
+            
+            articleBodyHtml += `<p>${paragraphText}</p>\n`;
+        });
+        
+        const metaDesc = remainingParagraphs[0] ? remainingParagraphs[0].substring(0, 150) + '...' : h1Title;
+        const safeH1Title = h1Title.replace(/"/g, '\\"'); // Bersihkan kutip agar script aman
+        
+        const finalHtmlOutput = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -320,7 +352,7 @@ function generateAndDownload() {
     </footer>
     <script>
         (function() {
-            const keyword = "${h1Title}";
+            const keyword = "${safeH1Title}";
             const displayed = new Set([keyword.toLowerCase()]);
             
             function generateRelated() {
@@ -392,17 +424,25 @@ function generateAndDownload() {
     <\/script>
 </body>
 </html>`;
-    const blob = new Blob([finalHtmlOutput], { type: 'text/html;charset=utf-8;' });
-    const link = document.createElement("a");
-    
-    if (link.download !== undefined) {
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", fileName);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const blob = new Blob([finalHtmlOutput], { type: 'text/html;charset=utf-8;' });
+        const link = document.createElement("a");
+        
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotif(`Sukses! Artikel '${fileName}' berhasil digenerate dan diunduh.`);
+        } else {
+            showNotif('Gagal: Browser Anda tidak mendukung download otomatis.', true);
+        }
+    } catch (error) {
+        console.error(error);
+        showNotif('Terjadi Kesalahan Sistem: ' + error.message, true);
     }
 }
 </script>
