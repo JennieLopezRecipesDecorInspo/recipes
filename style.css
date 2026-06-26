@@ -130,6 +130,19 @@ nav a:hover { color: #d35400; }
 .article-content p {
     margin-bottom: 1.2rem;
 }
+
+/* --- TAMBAHAN STYLE LIST UL/OL AGAR PROFESIONAL --- */
+.article-content ul, 
+.article-content ol {
+    margin-left: 2rem;
+    margin-bottom: 1.5rem;
+    padding-left: 0;
+}
+.article-content li {
+    margin-bottom: 0.6rem;
+    line-height: 1.7;
+}
+
 .related-posts-section {
     margin: 30px 0;
 }
@@ -182,8 +195,14 @@ footer {
         gap: 12px;
         padding: 0;
     }
+    
+    /* --- MENYEMBUNYIKAN MENU TAMBAHAN DI PONSEL --- */
+    nav ul li:nth-child(n+2) {
+        display: none; /* Menyembunyikan elemen setelah Home (About, Contact, dll) */
+    }
+
     nav a {
-        font-size: 0.9rem; /* Ukuran font link dibesarkan sedikit dibanding aslinya (0.85rem) agar mudah di tap */
+        font-size: 0.9rem; /* Ukuran font link dibesarkan sedikit agar mudah di tap */
     }
     .hero {
         padding: 1.5rem 0; /* Banner atas dipadatkan */
