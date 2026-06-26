@@ -281,8 +281,11 @@ function generateAndDownload() {
         const currentH1 = doc.querySelector('h1');
         const adCenter = document.createElement('center');
         adCenter.innerHTML = `<script src="https://seribudollarperhari.github.io/banner/ad2.js"><\/script>`;
+        
+        // BUG FIX DOM HIERARCHY: Menggunakan currentH1.parentNode 
+        // untuk memastikan elemen banner disisipkan di level yang tepat
         if (currentH1 && currentH1.nextSibling) {
-            doc.body.insertBefore(adCenter, currentH1.nextSibling);
+            currentH1.parentNode.insertBefore(adCenter, currentH1.nextSibling);
         } else if (currentH1) {
             currentH1.parentNode.appendChild(adCenter);
         } else {
