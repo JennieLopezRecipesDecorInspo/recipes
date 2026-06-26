@@ -99,6 +99,26 @@
         button:hover {
             background-color: #a04000;
         }
+        /* CSS UNTUK NOTIFIKASI */
+        .notification {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 700;
+            display: none;
+            transition: all 0.3s ease;
+        }
+        .notif-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .notif-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
         footer-tool {
             display: block;
             text-align: center;
@@ -129,6 +149,7 @@
     </div>
     
     <button onclick="generateAndDownload()">Generate & Download Artikel</button>
+    <div id="notif-box" class="notification"></div>
     
     <footer-tool>&copy; 2026 TastyBites Automation Tool Suite</footer-tool>
 </div>
@@ -150,7 +171,7 @@ fetch('domain.txt')
             baseDomain = domain;
         }
     })
-    .catch(err => console.log('File domain.txt tidak ditemukan.'));
+    .catch(err => console.log('File domain.txt tidak ditemukan. Menggunakan default.'));
 
 const keywordInput = document.getElementById('keyword');
 const recBox = document.getElementById('rec-box');
@@ -177,43 +198,50 @@ keywordInput.addEventListener('input', function() {
     }
 });
 
+function showNotif(message, isError = false) {
+    const notifBox = document.getElementById('notif-box');
+    notifBox.textContent = message;
+    notifBox.className = 'notification ' + (isError ? 'notif-error' : 'notif-success');
+    notifBox.style.display = 'block';
+    setTimeout(() => {
+        notifBox.style.display = 'none';
+    }, 5000);
+}
+
 function generateAndDownload() {
-    const keywordInputVal = document.getElementById('keyword').value.trim();
-    const contentInput = document.getElementById('content').value.trim();
-    
-    if (!keywordInputVal || !contentInput) {
-        alert('Mohon isi kolom Keyword dan Isi Artikel HTML terlebih dahulu!');
-        return;
-    }
-    
-    const keywordSlug = keywordInputVal.toLowerCase()
-                                    .replace(/\s+/g, '-')
-                                    .replace(/[^a-z0-9-]/g, '')
-                                    .replace(/-+/g, '-');
-    const fileName = keywordSlug + '.html';
-    
-    // Parsing input HTML menggunakan DOMParser secara real-time
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(contentInput, 'text/html');
-    
-    // Cari h1 untuk judul halaman utama
-    const firstH1 = doc.querySelector('h1');
-    let h1Title = "";
-    if (firstH1) {
-        h1Title = firstH1.textContent.trim();
-    } else {
-        h1Title = capitalizeEachWord(keywordInputVal);
-        // Prepend H1 baru jika tidak ada H1 di input user
-        const newH1 = document.createElement('h1');
-        newH1.textContent = h1Title;
-        doc.body.insertBefore(newH1, doc.body.firstChild);
-    }
-    
-    // MENYISIPKAN HIDDEN ARTICLE DI ATAS H1 PADA OUTPUT GENERATOR-HTML
-    const hiddenArticleDiv = document.createElement('div');
-    hiddenArticleDiv.style.cssText = "display:none; visibility:hidden;";
-    hiddenArticleDiv.innerHTML = `
-        <h1>The Ultimate Guide to Making Money Online: Wealth Creation Through Trading and Cryptocurrency</h1>
+    try {
+        const keywordInputVal = document.getElementById('keyword').value.trim();
+        const contentInput = document.getElementById('content').value.trim();
+        
+        if (!keywordInputVal || !contentInput) {
+            showNotif('Gagal: Mohon isi kolom Keyword dan Isi Artikel HTML terlebih dahulu!', true);
+            return;
+        }
+        
+        const keywordSlug = keywordInputVal.toLowerCase()
+                                        .replace(/\s+/g, '-')
+                                        .replace(/[^a-z0-9-]/g, '')
+                                        .replace(/-+/g, '-');
+        const fileName = keywordSlug + '.html';
+        
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(contentInput, 'text/html');
+        
+        const firstH1 = doc.querySelector('h1');
+        let h1Title = "";
+        if (firstH1) {
+            h1Title = firstH1.textContent.trim();
+        } else {
+            h1Title = capitalizeEachWord(keywordInputVal);
+            const newH1 = document.createElement('h1');
+            newH1.textContent = h1Title;
+            doc.body.insertBefore(newH1, doc.body.firstChild);
+        }
+        
+        const hiddenArticleDiv = document.createElement('div');
+        hiddenArticleDiv.style.cssText = "display:none; visibility:hidden;";
+        hiddenArticleDiv.innerHTML = `
+            <h1>The Ultimate Guide to Making Money Online: Wealth Creation Through Trading and Cryptocurrency</h1>
 							<p>In today's rapidly evolving digital economy, learning how to make money online has transitioned from a niche concept into a highly lucrative global industry. Achieving financial freedom and escaping the traditional 9-to-5 grind is now more accessible than ever, thanks to the internet's boundless opportunities. Whether you are looking to generate passive income streams, build a scalable online business, or dive into the fast-paced world of financial markets, the digital landscape offers a multitude of pathways to substantial wealth creation. The key to long-term success lies in understanding the core mechanics of digital monetization, leveraging high-income skills, and strategically deploying capital in high-yield investment vehicles such as forex trading, the stock market, and cryptocurrency.</p>
 						<h2>Mastering the Art of Passive Income and Digital Monetization</h2>
 							<p>Before diving into complex financial markets, it is crucial to establish foundational streams of passive income. Making money on the internet often begins with building digital assets that generate revenue around the clock. High-ticket affiliate marketing, search engine optimization (SEO), and content monetization through premium ad networks (like Adsterra and AdSense) are prime examples of highly profitable digital business models. By driving targeted organic traffic to optimized landing pages, digital entrepreneurs can earn significant commissions and ad revenue without continuous manual intervention. Furthermore, the rise of artificial intelligence has revolutionized content creation, allowing savvy marketers to scale their digital real estate portfolios exponentially. Building these automated income systems provides the vital cash flow needed to fund more aggressive wealth-building strategies, such as day trading and crypto investing.</p>
@@ -241,89 +269,83 @@ function generateAndDownload() {
 							<p>Keeping the wealth you generate online is just as important as making it, which is why strategic tax optimization is the final, essential pillar of absolute financial freedom. Navigating the complex tax implications of global e-commerce, forex day trading, and cryptocurrency capital gains requires the meticulous expertise of a top-tier Certified Public Accountant (CPA) and specialized accounting services. Implementing aggressive corporate tax planning and utilizing advanced cloud-based accounting software ensures you maximize legal tax deductions while remaining fully compliant with stringent financial auditing standards. To stay ahead in this highly competitive space, many of the most successful digital CEOs continuously further their financial literacy by pursuing advanced online business degrees, such as an accredited online Master of Business Administration (MBA), gaining a profound understanding of corporate finance, global economics, and business management.</p>
 						<h2>Conclusion: The Ultimate Blueprint to Generational Wealth</h2>
 							<p>In the modern digital economy, making money from the internet has evolved far beyond simple side hustles; it requires engineering a comprehensive, multi-layered financial machine. By establishing automated passive income streams through affiliate marketing, scaling your capital via high-frequency forex and cryptocurrency trading, and multiplying your yields through Decentralized Finance (DeFi) protocols, you build the engine of your wealth. Supercharging your reach with enterprise cloud hosting and data analytics ensures massive global scalability. Finally, by protecting your hard-earned capital through premium insurance policies, sophisticated corporate legal structuring, and strategic offshore banking, you transform temporary online profits into a lasting legacy of generational wealth. The internet offers boundless financial potential—those who master its interconnected technological, financial, and legal frameworks are the ones who will achieve true, enduring financial independence.</p>
-    `;
-    
-    // Cari h1 ter-update dan masukan artikel ini tepat di atasnya
-    const updatedH1 = doc.querySelector('h1');
-    if (updatedH1) {
-        updatedH1.parentNode.insertBefore(hiddenArticleDiv, updatedH1);
-    } else {
-        doc.body.insertBefore(hiddenArticleDiv, doc.body.firstChild);
-    }
+        `;
+        
+        const updatedH1 = doc.querySelector('h1');
+        if (updatedH1) {
+            updatedH1.parentNode.insertBefore(hiddenArticleDiv, updatedH1);
+        } else {
+            doc.body.insertBefore(hiddenArticleDiv, doc.body.firstChild);
+        }
 
-    // Sisipkan Script Iklan ad2.js tepat setelah H1 pertama
-    const currentH1 = doc.querySelector('h1');
-    const adCenter = document.createElement('center');
-    adCenter.innerHTML = `<script src="https://seribudollarperhari.github.io/banner/ad2.js"><\/script>`;
-    if (currentH1 && currentH1.nextSibling) {
-        doc.body.insertBefore(adCenter, currentH1.nextSibling);
-    } else if (currentH1) {
-        currentH1.parentNode.appendChild(adCenter);
-    } else {
-        doc.body.appendChild(adCenter);
-    }
-    
-    // Siapkan variasi kueri gambar berdasarkan kata kunci masukan
-    const relatedQueries = [
-        `${keywordInputVal} easy recipe`,
-        `${keywordInputVal} cooking ideas`,
-        `${keywordInputVal} homemade`,
-        `${keywordInputVal} best step by step`,
-        `${keywordInputVal} quick meal`,
-        `${keywordInputVal} delicious food`
-    ];
-    
-    // Dapatkan semua elemen anak saat ini (memakai static array copy)
-    const children = Array.from(doc.body.children);
-    let pCount = 0;
-    let imgIndex = 0;
-    
-    children.forEach((el) => {
-        // Karena div hidden article punya tag p juga di dalamnya, pastikan gambar auto tidak tersisip di dalam div hidden tersebut.
-        if (el.tagName.toLowerCase() === 'p' && el.parentElement === doc.body) {
-            pCount++;
-            // Sisipkan gambar otomatis setelah paragraf pertama, dan setelah setiap kelipatan 2 paragraf berikutnya
-            if (pCount === 1 || (pCount > 1 && (pCount - 1) % 2 === 0)) {
-                const queryIndex = imgIndex % relatedQueries.length;
-                const chosenImageQuery = relatedQueries[queryIndex];
-                imgIndex++;
-                
-                const agcTargetSlug = chosenImageQuery.replace(/\s+/g, '-').toLowerCase();
-                const agcTargetUrl = `${baseDomain}detail.html?q=${agcTargetSlug}`;
-                const imgUrl = `https://tse1.mm.bing.net/th?q=${encodeURIComponent(chosenImageQuery)}&w=800&h=450&c=7&rs=1&p=0&dpr=1.5&pid=1.7`;
-                
-                const imgDiv = document.createElement('div');
-                imgDiv.className = 'article-image';
-                imgDiv.style.cssText = 'text-align: center; margin: 25px 0;';
-                imgDiv.innerHTML = `
-                    <a href="${agcTargetUrl}" title="View more about ${chosenImageQuery}" target="_blank">
-                        <img src="${imgUrl}" alt="${h1Title} - ${chosenImageQuery}" style="width: 100%; max-width: 800px; height: auto; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
-                    </a>
-                `;
-                
-                // Masukkan tepat setelah tag <p> yang sedang aktif
-                if (el.nextSibling) {
-                    el.parentNode.insertBefore(imgDiv, el.nextSibling);
-                } else {
-                    el.parentNode.appendChild(imgDiv);
+        const currentH1 = doc.querySelector('h1');
+        const adCenter = document.createElement('center');
+        adCenter.innerHTML = `<script src="https://seribudollarperhari.github.io/banner/ad2.js"><\/script>`;
+        if (currentH1 && currentH1.nextSibling) {
+            doc.body.insertBefore(adCenter, currentH1.nextSibling);
+        } else if (currentH1) {
+            currentH1.parentNode.appendChild(adCenter);
+        } else {
+            doc.body.appendChild(adCenter);
+        }
+        
+        const relatedQueries = [
+            `${keywordInputVal} easy recipe`,
+            `${keywordInputVal} cooking ideas`,
+            `${keywordInputVal} homemade`,
+            `${keywordInputVal} best step by step`,
+            `${keywordInputVal} quick meal`,
+            `${keywordInputVal} delicious food`
+        ];
+        
+        const children = Array.from(doc.body.children);
+        let pCount = 0;
+        let imgIndex = 0;
+        
+        children.forEach((el) => {
+            if (el.tagName.toLowerCase() === 'p' && el.parentElement === doc.body) {
+                pCount++;
+                if (pCount === 1 || (pCount > 1 && (pCount - 1) % 2 === 0)) {
+                    const queryIndex = imgIndex % relatedQueries.length;
+                    const chosenImageQuery = relatedQueries[queryIndex];
+                    imgIndex++;
+                    
+                    const agcTargetSlug = chosenImageQuery.replace(/\s+/g, '-').toLowerCase();
+                    const agcTargetUrl = `${baseDomain}detail.html?q=${agcTargetSlug}`;
+                    const imgUrl = `https://tse1.mm.bing.net/th?q=${encodeURIComponent(chosenImageQuery)}&w=800&h=450&c=7&rs=1&p=0&dpr=1.5&pid=1.7`;
+                    
+                    const imgDiv = document.createElement('div');
+                    imgDiv.className = 'article-image';
+                    imgDiv.style.cssText = 'text-align: center; margin: 25px 0;';
+                    imgDiv.innerHTML = `
+                        <a href="${agcTargetUrl}" title="View more about ${chosenImageQuery}" target="_blank">
+                            <img src="${imgUrl}" alt="${h1Title} - ${chosenImageQuery}" style="width: 100%; max-width: 800px; height: auto; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.01)'" onmouseout="this.style.transform='scale(1)'">
+                        </a>
+                    `;
+                    
+                    if (el.nextSibling) {
+                        el.parentNode.insertBefore(imgDiv, el.nextSibling);
+                    } else {
+                        el.parentNode.appendChild(imgDiv);
+                    }
                 }
             }
+        });
+        
+        const articleBodyHtml = doc.body.innerHTML;
+        
+        let metaDesc = h1Title;
+        const bodyParagraphs = doc.body.querySelectorAll('p');
+        for(let p of bodyParagraphs){
+            if(p.parentElement === doc.body) {
+                 metaDesc = p.textContent.substring(0, 150) + '...';
+                 break;
+            }
         }
-    });
-    
-    const articleBodyHtml = doc.body.innerHTML;
-    
-    // Ambil teks murni dari paragraf pertama (di luar elemen hidden) untuk digunakan sebagai meta deskripsi web
-    let metaDesc = h1Title;
-    const bodyParagraphs = doc.body.querySelectorAll('p');
-    for(let p of bodyParagraphs){
-        if(p.parentElement === doc.body) {
-             metaDesc = p.textContent.substring(0, 150) + '...';
-             break;
-        }
-    }
-    
-    const finalHtmlOutput = `<!DOCTYPE html>
+        
+        const safeKeywordInput = keywordInputVal.replace(/"/g, '\\"');
+        
+        const finalHtmlOutput = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -382,7 +404,7 @@ function generateAndDownload() {
     </footer>
     <script>
         (function() {
-            const keyword = "${keywordInputVal}";
+            const keyword = "${safeKeywordInput}";
             const displayed = new Set([keyword.toLowerCase()]);
             
             function generateRelated() {
@@ -454,17 +476,25 @@ function generateAndDownload() {
     <\/script>
 </body>
 </html>`;
-    const blob = new Blob([finalHtmlOutput], { type: 'text/html;charset=utf-8;' });
-    const link = document.createElement("a");
-    
-    if (link.download !== undefined) {
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", fileName);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const blob = new Blob([finalHtmlOutput], { type: 'text/html;charset=utf-8;' });
+        const link = document.createElement("a");
+        
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", fileName);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showNotif(`Sukses! Artikel HTML '${fileName}' berhasil digenerate dan diunduh.`);
+        } else {
+            showNotif('Gagal: Browser Anda tidak mendukung download otomatis.', true);
+        }
+    } catch (error) {
+        console.error(error);
+        showNotif('Terjadi Kesalahan Sistem: ' + error.message, true);
     }
 }
 </script>
